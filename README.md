@@ -1,0 +1,1 @@
+This dataset contains transcriptomic (RNA-seq) data of 55 healthy human pancreatic acinar cells collected from deceased organ donors. The file contain an unique sample ID for each healthy human pancreatic acinar cell along with different Ensembl gene IDs. Additionally there is a separate file of the grouping of the subtype and it will be used to train the model.
