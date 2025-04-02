@@ -1,0 +1,192 @@
+# Extract the gene list from RF
+
+selected_genes = ["SEL1L", "DUOX2", "TUBA1A", "KRT19", "CTRL", "S100A6", "ICAM1", "ERO1B", "NEAT1", "FLRT2"]
+
+
+# Filter the dataset for the selected genes
+
+filtered_df_new = df_new[df_new["Sample_ID"].isin(selected_genes)].set_index("Sample_ID")
+
+
+# Transpose the dataframe so that samples are rows and genes are columns
+
+filtered_df_new = filtered_df_new.T
+
+
+# Standardize the data
+
+scaler = StandardScaler()
+
+filtered_scaled_new = scaler.fit_transform(filtered_df_new)
+
+
+# Perform PCA
+
+pca = PCA(n_components=2)
+
+pca_result_new = pca.fit_transform(filtered_scaled_new)
+
+
+# Perform K-means clustering
+
+kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
+
+clusters_new = kmeans.fit_predict(filtered_scaled_new)
+
+
+# Create a DataFrame for PCA visualization
+
+pca_df_new = pd.DataFrame({
+
+'PC1': pca_result_new[:, 0],
+
+'PC2': pca_result_new[:, 1],
+
+'Cluster': clusters_new,
+
+'Sample_ID': filtered_df_new.index
+
+})
+
+
+# Plot PCA with cluster assignments
+
+plt.figure(figsize=(8, 6))
+
+sns.scatterplot(data=pca_df_new, x='PC1', y='PC2', hue=pca_df_new['Cluster'], palette='coolwarm', s=100)
+
+plt.title("PCA with K-Means Clustering (2 Clusters) - Updated Data")
+
+plt.xlabel("Principal Component 1")
+
+plt.ylabel("Principal Component 2")
+
+plt.legend(title="Cluster")
+
+plt.grid(True)
+
+plt.show()
+
+
+
+# Generate boxplots for key genes to visualize expression differences between Group 1 and Group 2
+
+plt.figure(figsize=(12, 8))
+
+selected_genes_for_plot = ["CTRL", "SEL1L", "KRT19", "S100A6", "TUBA1A", "ICAM1"] # Top genes showing differences
+
+
+for i, gene in enumerate(selected_genes_for_plot, 1):
+
+plt.subplot(2, 3, i)
+
+sns.boxplot(x=filtered_df_new["Group"], y=filtered_df_new[gene], palette=["blue", "red"])
+
+plt.title(f"Expression of {gene} by Group")
+
+plt.xlabel("Group")
+
+plt.ylabel("Expression Level")
+
+
+plt.tight_layout()
+
+plt.show()
+
+
+# Define the new gene set from the SVM model
+
+svm_selected_genes = ["RPL41P1", "SLC4A4", "PDIA4", "IER3", "PRSS1", "MLEC", "TNFRSF12A", "SPINT1", "RHOBTB3", "CHMP4B"]
+
+
+# Filter the dataset for the new SVM-selected genes
+
+filtered_df_svm = df_new[df_new["Sample_ID"].isin(svm_selected_genes)].set_index("Sample_ID")
+
+
+# Transpose the dataframe so that samples are rows and genes are columns
+
+filtered_df_svm = filtered_df_svm.T
+
+
+# Standardize the data
+
+scaler = StandardScaler()
+
+filtered_scaled_svm = scaler.fit_transform(filtered_df_svm)
+
+
+# Perform PCA
+
+pca_svm = PCA(n_components=2)
+
+pca_result_svm = pca_svm.fit_transform(filtered_scaled_svm)
+
+
+# Perform K-means clustering
+
+kmeans_svm = KMeans(n_clusters=2, random_state=42, n_init=10)
+
+clusters_svm = kmeans_svm.fit_predict(filtered_scaled_svm)
+
+
+# Create a DataFrame for PCA visualization
+
+pca_df_svm = pd.DataFrame({
+
+'PC1': pca_result_svm[:, 0],
+
+'PC2': pca_result_svm[:, 1],
+
+'Cluster': clusters_svm,
+
+'Sample_ID': filtered_df_svm.index
+
+})
+
+
+# Rename clusters based on previous convention
+
+pca_df_svm["Group"] = pca_df_svm["Cluster"].replace({0: "Group 1", 1: "Group 2"})
+
+
+# Plot PCA with new SVM-selected genes
+
+plt.figure(figsize=(8, 6))
+
+sns.scatterplot(data=pca_df_svm, x='PC1', y='PC2', hue=pca_df_svm['Group'], palette=['blue', 'red'], s=100)
+
+plt.title("PCA with K-Means Clustering (SVM-Selected Genes)")
+
+plt.xlabel("Principal Component 1")
+
+plt.ylabel("Principal Component 2")
+
+plt.legend(title="Group")
+
+plt.grid(True)
+
+plt.show()
+
+
+# Generate boxplots using raw expression values
+
+plt.figure(figsize=(12, 8))
+
+
+for i, gene in enumerate(group_2_genes_svm, 1):
+
+plt.subplot(2, 2, i)
+
+sns.boxplot(x=pca_df_svm["Group"], y=df[df["Sample_ID"] == gene].set_index("Sample_ID").T.values.flatten(), palette=["blue", "red"])
+
+plt.title(f"Raw Expression of {gene} by Group")
+
+plt.xlabel("Group")
+
+plt.ylabel("Expression Level")
+
+
+plt.tight_layout()
+
+plt.show()
